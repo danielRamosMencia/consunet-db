@@ -6,3 +6,183 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Role {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name   String  @db.VarChar(255)
+  code   String  @unique @db.VarChar(8)
+  active Boolean @default(true) @db.Boolean
+
+  users      User[]      @relation(name: "user_role")
+  adminUsers AdminUser[] @relation(name: "adm_user_role")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model User {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  username String  @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
+  password String  @db.VarChar(255)
+  active   Boolean @default(true) @db.Boolean
+
+  role_id String @db.VarChar(32)
+  role    Role   @relation(name: "user_role", fields: [role_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  subscription_id String?       @db.VarChar(32)
+  subscription    Subscription? @relation(name: "user_subscription", fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  projects Project[] @relation("user_projects")
+
+  collaborations UsersOnProject[] @relation("collaborations")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model AdminUser {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  username String  @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
+  password String  @db.VarChar(255)
+  token    String  @unique @db.VarChar(32)
+  active   Boolean @default(true) @db.Boolean
+
+  role_id String? @db.VarChar(32)
+  role    Role?   @relation(name: "adm_user_role", fields: [role_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model Subscription {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name   String  @db.VarChar(255)
+  code   String  @unique @db.VarChar(8)
+  active Boolean @default(true) @db.Boolean
+
+  users User[] @relation(name: "user_subscription")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model Project {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name String @db.VarChar(255)
+  code String @unique @db.VarChar(8)
+
+  user_id String @db.VarChar(32)
+  user    User   @relation(name: "user_projects", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  connection_id String     @db.VarChar(32)
+  connection    Connection @relation(name: "project_connection", fields: [connection_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  collaborators UsersOnProject[] @relation(name: "collaborators")
+
+  devices DevicesOnProject[] @relation(name: "project_devices")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model Device {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name   String  @db.VarChar(255)
+  code   String  @unique @db.VarChar(8)
+  active Boolean @default(true) @db.Boolean
+
+  projects DevicesOnProject[] @relation("devices_on_project")
+
+  created_at DateTime @default(now())
+  updatet_at DateTime @updatedAt
+}
+
+model Activity {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name            String  @db.VarChar(255)
+  code            String  @unique @db.VarChar(8)
+  max_consumption Decimal @db.Decimal(10, 2)
+  min_consumption Decimal @db.Decimal(10, 2)
+  active          Boolean @default(true) @db.Boolean
+
+  device_activity DevicesOnProject[] @relation(name: "device_activity")
+
+  created_at DateTime @default(now())
+  updatet_at DateTime @updatedAt
+}
+
+model Connection {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name   String  @db.VarChar(255)
+  code   String  @unique @db.VarChar(8)
+  active Boolean @default(true) @db.Boolean
+
+  project Project[] @relation(name: "project_connection")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model UsersOnProject {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  user_id    String  @db.VarChar(32)
+  user       User    @relation(name: "collaborations", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String  @db.VarChar(32)
+  project    Project @relation(name: "collaborators", fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  permission_id String     @db.VarChar(32)
+  permission    Permission @relation(name: "collab_permission", fields: [permission_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  assigned_at DateTime @default(now())
+  assigned_by String   @default("Sistema") @db.VarChar(255)
+}
+
+model DevicesOnProject {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  device_id  String  @db.VarChar(32)
+  device     Device  @relation(name: "devices_on_project", fields: [device_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  project_id String  @db.VarChar(32)
+  project    Project @relation(name: "project_devices", fields: [project_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  activity_id String   @db.VarChar(32)
+  activity    Activity @relation(name: "device_activity", fields: [activity_id], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  assigned_at DateTime @default(now())
+  assigned_by String   @default("Sistema") @db.VarChar(255)
+}
+
+model Permission {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  name   String  @db.VarChar(255)
+  code   String  @unique @db.VarChar(8)
+  active Boolean @default(true) @db.Boolean
+
+  collab_permission UsersOnProject[] @relation(name: "collab_permission")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
+
+model Request {
+  id String @id @default(cuid()) @db.VarChar(32)
+
+  content      String @db.VarChar(2000)
+  requested_by String @db.VarChar(255)
+  status       String @db.VarChar(100)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+}
