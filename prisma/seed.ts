@@ -1,9 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { roleSeed } from "./seeds/roleSeed";
+import { subscriptionSeed } from "./seeds/subscriptionSeed";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("TO DO - Create seeds files");
+  console.log("--- Executing seeds ---");
+  await roleSeed(prisma);
+  await subscriptionSeed(prisma);
+  console.log("--- Seeds execution completed ---");
 }
 
 main()
