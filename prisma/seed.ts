@@ -8,6 +8,8 @@ import { activitySeed } from "./seeds/activitySeed";
 import { deviceSeed } from "./seeds/deviceSeed";
 import { projectSeed } from "./seeds/projectSeed";
 import { permissionSeed } from "./seeds/permissionSeed";
+import { devicesOnProjectSeed } from "./seeds/devicesOnProjectSeed";
+import { usersOnProjectsSeed } from "./seeds/usersOnProjectSeed";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +24,8 @@ async function main() {
   await deviceSeed(prisma);
   await projectSeed(prisma);
   await permissionSeed(prisma);
+  await devicesOnProjectSeed(prisma);
+  await usersOnProjectsSeed(prisma);
   console.log("--- Seeds execution completed ---");
 }
 
